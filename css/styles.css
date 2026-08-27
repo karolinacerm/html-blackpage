@@ -1005,6 +1005,26 @@ body.navmenu-open { overflow:hidden; }
   margin-top:0;
 }
 
+/* Right column copy: large, semi-bold, muted "Detail Desc" style.
+   (font-size steps up to 44/54 on desktop in the media query below). */
+.project-detail .project-main .block--text p,
+.project-detail .project-main .block--text h1,
+.project-detail .project-main .block--text h2,
+.project-detail .project-main .block--text h3,
+.project-detail .project-main .block--text h4{
+  color:var(--label-border-mobile, rgba(25, 24, 23, 0.40));
+  font-family:Montserrat, sans-serif;
+  font-weight:600;
+  font-size:clamp(24px, 6vw, 44px);
+  line-height:1.2273;
+  letter-spacing:-0.01em;
+  text-transform:none;
+}
+.project-detail .project-main .block--text strong{
+  font-weight:600;
+  color:inherit;
+}
+
 @media (min-width:900px){
   .project-detail{
     --aside-w:clamp(260px, 26vw, 420px);
@@ -1030,12 +1050,23 @@ body.navmenu-open { overflow:hidden; }
     opacity:0;
     pointer-events:none;
   }
-  /* Right column: normal flow, offset to clear the fixed left column. */
+  /* Right column: normal flow, offset to clear the fixed left column.
+     A vertical divider sits in the middle of the gap between the columns. */
   .project-detail .project-main{
-    margin-left:calc(var(--aside-w) + var(--aside-gap));
+    margin-left:calc(var(--aside-w) + var(--aside-gap) / 2);
+    padding-left:calc(var(--aside-gap) / 2);
+    border-left:1px solid var(--label-border-color);
   }
   .project-detail .project-main .block--text{
     margin:0;
+  }
+  .project-detail .project-main .block--text p,
+  .project-detail .project-main .block--text h1,
+  .project-detail .project-main .block--text h2,
+  .project-detail .project-main .block--text h3,
+  .project-detail .project-main .block--text h4{
+    font-size:44px;
+    line-height:54px;
   }
 }
 .project-detail .project-meta{
