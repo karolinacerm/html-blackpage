@@ -993,8 +993,10 @@ body.navmenu-open { overflow:hidden; }
   content-visibility:visible;
   contain-intrinsic-size:auto;
 }
+/* No gap between blocks: consecutive images sit flush against each other,
+   while text blocks keep their own vertical padding for breathing room. */
 .project-detail .project-main .project-content{
-  gap:var(--space-workprojects-text-img);
+  gap:0;
 }
 /* First block sits flush at the top so the right column lines up with the
    left-hand title (a leading text block would otherwise add top padding). */
