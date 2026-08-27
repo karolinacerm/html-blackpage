@@ -905,23 +905,136 @@ body.navmenu-open { overflow:hidden; }
   padding:var(--pad-section-y) 0;
 }
 .project-detail article.project{
-  padding-left:var(--pad-article);
-  padding-right:var(--pad-article);
-  display:flex;
-  flex-direction:column;
-  gap:var(--space-h2-sections);  
+  padding-left:var(--pad-lr);
+  padding-right:var(--pad-lr);
+  max-width:1600px;
   margin-inline:auto;
 }
-.project-detail .project-wrapper{
-  width:100%;
+
+/* ---- Two-column layout: fully static (fixed) left, scrolling right ----
+   Mobile: single column, aside stacked above the content.
+   Desktop (>=900px): the left column is position:fixed so it never moves. */
+.project-detail .project-layout{
+  display:block;
+}
+.project-detail .project-aside{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-h2-sections);
+  margin-bottom:var(--space-h2-sections);
+}
+.project-detail .project-intro{
+  display:flex;
+  flex-direction:column;
+  gap:var(--space-h2-labels);
+}
+.project-detail .project-title{
+  font-size:var(--type-h1-size);
+  line-height:var(--type-h1-line);
+  font-weight:600;
+  letter-spacing:var(--type-h2-spacing);
+  text-transform:uppercase;
+}
+.project-detail .project-info{
   display:flex;
   flex-direction:column;
   gap:var(--space-workprojects-text-img);
 }
-.project-detail .project-header{
+.project-detail .project-label{
+  margin:0 0 var(--space-h2-labels);
+  font-size:var(--type-tags-size);
+  line-height:var(--type-tags-line);
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  font-weight:600;
+  color:var(--brand-black);
+}
+.project-detail .project-info-body,
+.project-detail .project-info-body p{
+  margin:0;
+  font-size:var(--type-subhead-size);
+  line-height:var(--type-subhead-line);
+  font-weight:var(--type-subhead-weight);
+  letter-spacing:var(--type-subhead-spacing);
+  color:var(--muted);
+}
+.project-detail .project-nav{
   display:flex;
-  flex-direction:column;  
-  gap: var(--space-h2-labels);
+  justify-content:space-between;
+  gap:var(--gap);
+  padding-top:var(--space-workprojects-text-img);
+  border-top:1px solid var(--label-border-color);
+}
+.project-detail .project-nav-link{
+  display:inline-flex;
+  align-items:center;
+  gap:var(--space-label-label-x);
+  font-size:var(--type-tags-size);
+  line-height:var(--type-tags-line);
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  font-weight:500;
+  color:var(--brand-black);
+  white-space:nowrap;
+  transition:color .2s ease;
+}
+.project-detail .project-nav-link > span{white-space:nowrap;}
+.project-detail .project-nav-link:hover{color:var(--muted);}
+.project-detail .project-nav-next{margin-left:auto;text-align:right;}
+.project-detail .project-main{
+  min-width:0;
+}
+/* The right column is a normal in-flow block that the page scrolls past the
+   fixed left column. Keep its intrinsic height honest (the global
+   `content-visibility:auto` size containment would otherwise report the
+   `contain-intrinsic-size` placeholder height and shift the page length). */
+.project-detail .project-main .project-content,
+.project-detail .project-main .project-links{
+  content-visibility:visible;
+  contain-intrinsic-size:auto;
+}
+.project-detail .project-main .project-content{
+  gap:var(--space-workprojects-text-img);
+}
+/* First block sits flush at the top so the right column lines up with the
+   left-hand title (a leading text block would otherwise add top padding). */
+.project-detail .project-main .project-content > :first-child{
+  padding-top:0;
+  margin-top:0;
+}
+
+@media (min-width:900px){
+  .project-detail{
+    --aside-w:clamp(260px, 26vw, 420px);
+    --aside-gap:clamp(48px, 5vw, 96px);
+  }
+  /* Left column: completely static — fixed to the viewport, never scrolls.
+     `top` is fine-tuned in JS to line up with the top of the content;
+     this value is the fallback / clears the header. `left` tracks the
+     centered 1600px container so it stays aligned with the content column. */
+  .project-detail .project-aside{
+    position:fixed;
+    top:calc(var(--pad-navbar-top) + 96px);
+    left:max(var(--pad-lr), calc(50vw - 800px + var(--pad-lr)));
+    width:var(--aside-w);
+    margin-bottom:0;
+    max-height:calc(100vh - var(--pad-navbar-top) - 140px);
+    overflow-y:auto;
+    z-index:5;
+    transition:opacity .25s ease;
+  }
+  /* hidden by JS once the footer scrolls up, so it never overlaps the footer */
+  .project-detail .project-aside.is-hidden{
+    opacity:0;
+    pointer-events:none;
+  }
+  /* Right column: normal flow, offset to clear the fixed left column. */
+  .project-detail .project-main{
+    margin-left:calc(var(--aside-w) + var(--aside-gap));
+  }
+  .project-detail .project-main .block--text{
+    margin:0;
+  }
 }
 .project-detail .project-meta{
   margin:0;
@@ -931,13 +1044,6 @@ body.navmenu-open { overflow:hidden; }
   line-height: var(--type-subhead-line);
   font-weight: var(--type-subhead-weight);
   color:var(--muted);
-}
-.project-detail .project-header h2{  
-  font-size:var(--type-h2-size);
-  font-weight: var(--type-h2-weight);
-  letter-spacing: var(--type-h2-spacing);
-  line-height: var(--type-h2-line);
-  text-transform: uppercase;
 }
 .project-detail .project-details{
   margin:0;

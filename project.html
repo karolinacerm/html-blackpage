@@ -15,18 +15,46 @@
 
   <main id="main">
     <article class="project" data-project hidden>
-      <div class="project-header">
-        <h2 data-field="title">Project</h2>
-        <p class="project-meta" data-field="meta"></p>
-      </div>
-      <div class="project-wrapper">
-        <dl class="project-details" data-field="details"></dl>
+      <div class="project-layout">
+        <aside class="project-aside">
+          <div class="project-intro">
+            <h1 class="project-title" data-field="title">Project</h1>
+            <p class="project-meta" data-field="meta"></p>
+          </div>
 
-        <div class="project-content" data-field="content"></div>
+          <div class="project-info">
+            <div class="project-info-block" data-block="goal" hidden>
+              <h2 class="project-label">Goal</h2>
+              <div class="project-info-body" data-field="goal"></div>
+            </div>
 
-        <div class="project-links" data-block="links" hidden>
-          <h2>Related</h2>
-          <div class="project-links-list" data-field="links"></div>
+            <div class="project-info-block" data-block="year" hidden>
+              <h2 class="project-label">Year</h2>
+              <p class="project-info-body" data-field="year"></p>
+            </div>
+
+            <dl class="project-details" data-field="details"></dl>
+          </div>
+
+          <nav class="project-nav" data-block="nav" aria-label="Project navigation" hidden>
+            <a class="project-nav-link project-nav-prev" data-field="prev" rel="prev">
+              <span class="project-nav-arrow" aria-hidden="true">←</span>
+              <span>Previous project</span>
+            </a>
+            <a class="project-nav-link project-nav-next" data-field="next" rel="next">
+              <span>Next project</span>
+              <span class="project-nav-arrow" aria-hidden="true">→</span>
+            </a>
+          </nav>
+        </aside>
+
+        <div class="project-main">
+          <div class="project-content" data-field="content"></div>
+
+          <div class="project-links" data-block="links" hidden>
+            <h2>Related</h2>
+            <div class="project-links-list" data-field="links"></div>
+          </div>
         </div>
       </div>
     </article>

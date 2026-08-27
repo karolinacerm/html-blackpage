@@ -195,6 +195,61 @@ function createFigure(src, alt) {
     return /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(src || '');
   }
 
+  function renderGoal(goal) {
+    const block = getBlock('goal');
+    const body = getField('goal');
+    if (!block || !body) return;
+    if (!renderMarkdown(body, goal)) {
+      block.remove();
+      return;
+    }
+    block.hidden = false;
+  }
+
+  function renderYear(year) {
+    const block = getBlock('year');
+    const body = getField('year');
+    if (!block || !body) return;
+    const value = (year === 0 || year) ? String(year).trim() : '';
+    if (!value) {
+      block.remove();
+      return;
+    }
+    body.textContent = value;
+    block.hidden = false;
+  }
+
+  function renderNav(projects, currentIndex) {
+    const nav = getBlock('nav');
+    if (!nav) return;
+
+    const list = Array.isArray(projects) ? projects : [];
+    if (list.length < 2 || currentIndex < 0) {
+      nav.remove();
+      return;
+    }
+
+    const prevEl = getField('prev');
+    const nextEl = getField('next');
+    const total = list.length;
+    const prev = list[(currentIndex - 1 + total) % total];
+    const next = list[(currentIndex + 1) % total];
+
+    const applyLink = (el, project) => {
+      if (!el) return;
+      if (!project || !project.id) {
+        el.remove();
+        return;
+      }
+      el.href = `./project.html?id=${encodeURIComponent(project.id)}`;
+      if (project.title) el.title = project.title;
+    };
+
+    applyLink(prevEl, prev);
+    applyLink(nextEl, next);
+    nav.hidden = false;
+  }
+
   function renderContent(blocks) {
     const wrapper = getField('content');
     if (!wrapper) return;
@@ -307,7 +362,80 @@ function createFigure(src, alt) {
     block.hidden = false;
   }
 
-  function renderProject(project) {
+  function setupStaticAside() {
+    const aside = document.querySelector('.project-aside');
+    const main = document.querySelector('.project-main');
+    if (!aside || !main) return;
+
+    const desktop = window.matchMedia('(min-width: 900px)');
+    let ticking = false;
+
+    // Position the fixed column so it lines up with the top of the content,
+    // but always stays fully inside the viewport (so PREVIOUS/NEXT is never
+    // clipped). On short windows it moves up and, only if it still can't fit,
+    // scrolls internally.
+    const alignTop = () => {
+      if (!desktop.matches) {
+        aside.style.top = '';
+        aside.style.maxHeight = '';
+        return;
+      }
+      const margin = 24;
+      const header = document.querySelector('header');
+      const minTop = (header ? Math.round(header.getBoundingClientRect().height) : 120) + 16;
+      const contentTop = Math.round(main.getBoundingClientRect().top + window.pageYOffset);
+
+      // Measure the column's natural height (without the max-height clamp).
+      const prevMax = aside.style.maxHeight;
+      aside.style.maxHeight = 'none';
+      const asideH = aside.offsetHeight;
+      aside.style.maxHeight = prevMax;
+
+      const fitTop = window.innerHeight - asideH - margin;
+      const top = Math.max(minTop, Math.min(contentTop, fitTop));
+      aside.style.top = top + 'px';
+      aside.style.maxHeight = Math.max(160, window.innerHeight - top - margin) + 'px';
+    };
+
+    // Hide the fixed column once the footer scrolls up, so it never overlaps it.
+    const update = () => {
+      ticking = false;
+      if (!desktop.matches) {
+        aside.classList.remove('is-hidden');
+        return;
+      }
+      const stoppers = ['#contact', '.footer-visual', '.footer']
+        .map(sel => document.querySelector(sel))
+        .filter(Boolean);
+      const limit = aside.getBoundingClientRect().bottom + 24;
+      const reached = stoppers.some(el => el.getBoundingClientRect().top < limit);
+      aside.classList.toggle('is-hidden', reached);
+    };
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(update);
+    };
+
+    const onResize = () => {
+      alignTop();
+      update();
+    };
+
+    alignTop();
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onResize);
+    // Re-align after the header/footer partials and images settle.
+    window.addEventListener('load', onResize);
+    [150, 500, 1200].forEach(delay => setTimeout(onResize, delay));
+    if (typeof desktop.addEventListener === 'function') {
+      desktop.addEventListener('change', onResize);
+    }
+  }
+
+  function renderProject(project, projects, currentIndex) {
     if (!project) {
       article.hidden = true;
       emptyState.hidden = false;
@@ -330,14 +458,23 @@ function createFigure(src, alt) {
       }
     }
 
+    renderGoal(project.goal);
+    renderYear(project.year);
     renderDetails(project.details || project.meta);
+
+    const info = article.querySelector('.project-info');
+    if (info && !info.children.length) info.remove();
+
+    renderNav(projects, typeof currentIndex === 'number' ? currentIndex : -1);
     renderContent(project.content);
     renderLinks(project.links);
 
     article.hidden = false;
     emptyState.hidden = true;
 
-    // INICIALIZACE / REFRESH AOS    
+    setupStaticAside();
+
+    // INICIALIZACE / REFRESH AOS
     requestAnimationFrame(() => {
       refreshAOS();
     });
@@ -354,8 +491,8 @@ function createFigure(src, alt) {
 
     try {
       const projects = await fetchProjects(src);
-      const project = projects.find(item => item.id === projectId);
-      renderProject(project || null);
+      const index = projects.findIndex(item => item.id === projectId);
+      renderProject(index >= 0 ? projects[index] : null, projects, index);
     } catch (err) {
       console.warn('Fetch project selhal, zkusím inline data:', err);
       if (inline) {
@@ -363,8 +500,8 @@ function createFigure(src, alt) {
           const text = inline.textContent || '';
           const fallback = parseInlineData(text, '[]');
           const projects = parseProjects(fallback);
-          const project = projects.find(item => item.id === projectId);
-          renderProject(project || null);
+          const index = projects.findIndex(item => item.id === projectId);
+          renderProject(index >= 0 ? projects[index] : null, projects, index);
           return;
         } catch (parseErr) {
           console.error('Inline data má chybný formát:', parseErr);
